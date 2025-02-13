@@ -41,11 +41,66 @@ export class ProductsService {
   }
 
   // ✅ 특정 UID로 제품 조회 (단건 조회)
-  async findByUid(uid: string): Promise<Product> {
+  async findByUid(uid: string): Promise<any> {
+    // ✅ 제품 정보 가져오기
     const product = await this.productModel.findOne({ uid }).exec();
     if (!product) {
       throw new NotFoundException(`Product with UID ${uid} not found`);
     }
-    return product;
+
+    // ✅ 추가 정보 가져오기 (product_analyze 컬렉션에서 검색)
+    const additionalInfo = await this.productModel.db
+      .collection('product_analyze')
+      .findOne({ uid });
+
+    // ✅ 추가 정보가 있다면 정리
+    let formattedAdditionalInfo: {
+      review_percent?: any;
+      review_summary?: { advantages: string[]; disadvantages: string[] };
+    } | null = null;
+
+    if (additionalInfo) {
+      const reviewSummaryText = additionalInfo.review_summary || '';
+
+      // ✅ 리뷰 요약을 JSON 형태로 변환
+      const reviewSummary = this.formatReviewSummary(reviewSummaryText);
+
+      // ✅ 불필요한 필드 제거한 추가 정보 반환
+      formattedAdditionalInfo = {
+        review_percent: additionalInfo.review_percent,
+        review_summary: reviewSummary,
+      };
+    }
+
+    // ✅ 최종 데이터 반환
+    return {
+      ...product.toObject(), // 기존 제품 정보
+      additionalInfo: formattedAdditionalInfo, // 가공된 추가 정보
+    };
+  }
+
+  private formatReviewSummary(summary: string) {
+    const sections = summary.split('\n\n'); // 장점 / 단점 구분
+    let advantages: string[] = [];
+    let disadvantages: string[] = [];
+
+    sections.forEach((section) => {
+      if (section.match(/^.*장점[:：]/)) {
+        advantages = section
+          .replace(/^.*장점[:：]\n?/, '') // "장점:" 앞의 불필요한 부분 삭제
+          .split('\n')
+          .map((line) => line.replace(/^[-•*]\s*/, '').trim()) // 앞에 있는 "-" 또는 "•" 또는 "*" 제거
+          .filter((line) => line.length > 0); // 빈 값 제거
+      }
+      if (section.match(/^.*단점[:：]/)) {
+        disadvantages = section
+          .replace(/^.*단점[:：]\n?/, '') // "단점:" 앞의 불필요한 부분 삭제
+          .split('\n')
+          .map((line) => line.replace(/^[-•*]\s*/, '').trim()) // 앞에 있는 "-" 또는 "•" 또는 "*" 제거
+          .filter((line) => line.length > 0); // 빈 값 제거
+      }
+    });
+
+    return { advantages, disadvantages };
   }
 }
