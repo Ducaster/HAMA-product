@@ -103,4 +103,29 @@ export class ProductsService {
 
     return { advantages, disadvantages };
   }
+
+  // ✅ 인덱스 없이 전체 데이터에서 검색 (키워드 포함)
+  async searchProducts(keyword: string, page: number = 1, limit: number = 40) {
+    const query = {
+      $or: [
+        { name: { $regex: keyword, $options: 'i' } },
+        { brand: { $regex: keyword, $options: 'i' } },
+        { category: { $regex: keyword, $options: 'i' } },
+      ],
+    };
+
+    const total = await this.productModel.countDocuments(query).exec();
+    const data = await this.productModel
+      .find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    if (!data.length) {
+      console.log(`🚨 검색 결과 없음: keyword=${keyword}`);
+      throw new NotFoundException(`No products found for keyword: ${keyword}`);
+    }
+
+    return { total, data };
+  }
 }

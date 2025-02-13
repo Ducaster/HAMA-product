@@ -15,6 +15,16 @@ export class ProductsController {
     return this.productsService.findAll(Number(page), Number(limit));
   }
 
+  // ✅ 검색 API 추가 (키워드 포함 검색)
+  @Get('search')
+  async searchProducts(
+    @Query('keyword') keyword: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 40,
+  ) {
+    return this.productsService.searchProducts(keyword, page, limit);
+  }
+
   // ✅ 특정 UID 기반 조회 (단일 상품)
   @Get(':uid')
   async getProductByUid(@Param('uid') uid: string): Promise<Product> {
