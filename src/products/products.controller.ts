@@ -25,12 +25,6 @@ export class ProductsController {
     return this.productsService.searchProducts(keyword, page, limit);
   }
 
-  // ✅ 특정 UID 기반 조회 (단일 상품)
-  @Get(':uid')
-  async getProductByUid(@Param('uid') uid: string): Promise<Product> {
-    return this.productsService.findByUid(uid);
-  }
-
   // ✅ 특정 카테고리 제품 가져오기 (페이지네이션 추가)
   @Get('category/:category')
   async getProductsByCategory(
@@ -43,5 +37,11 @@ export class ProductsController {
       Number(page),
       Number(limit),
     );
+  }
+
+  // ✅ 특정 UID 기반 조회 (단일 상품)
+  @Get(':uid')
+  async getProductByUid(@Param('uid') uid: string): Promise<Product> {
+    return this.productsService.findByUid(uid);
   }
 }
