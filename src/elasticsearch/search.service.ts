@@ -25,6 +25,13 @@ export class SearchService {
         },
       },
     });
-    return result.hits.hits;
+
+    return {
+      total:
+        typeof result.hits.total === 'number'
+          ? result.hits.total
+          : (result.hits.total?.value ?? 0),
+      data: result.hits.hits.map((hit) => hit._source),
+    };
   }
 }
