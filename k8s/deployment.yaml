@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-api
+  template:
+    metadata:
+      labels:
+        app: product-api
+    spec:
+      serviceAccountName: product-api-sa
+      containers:
+        - name: product-api
+          image: node:18
+          workingDir: /app
+          command: ['/bin/sh', '-c']
+          args:
+            - |
+              git clone https://github.com/your-username/your-repo.git .
+              npm install
+              npm run build
+              npm run start:prod
+          ports:
+            - containerPort: 3007
+          env:
+            - name: PORT
+              value: '3007'
+            - name: DYNAMODB_TABLE
+              value: 'products'
+            - name: AWS_REGION
+              value: 'ap-northeast-2'
+            - name: ELASTICSEARCH_NODE
+              value: 'http://elasticsearch-service:9200'

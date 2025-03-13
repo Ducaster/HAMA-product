@@ -1,33 +1,15 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-
-export type ProductDocument = Product & Document;
-
-@Schema()
-export class Product {
-  @Prop({ required: true })
-  site: string;
-
-  @Prop({ required: true })
-  category: string;
-
-  @Prop({ required: true })
-  link: string;
-
-  @Prop({ required: true })
-  img: string;
-
-  @Prop({ required: true })
+export interface Product {
+  pk: string; // 파티션 키 (예: PRODUCT#${uid})
+  sk: string; // 정렬 키 (예: METADATA#${category})
   uid: string;
-
-  @Prop({ required: true })
+  site: string;
+  category: string;
+  link: string;
+  img: string;
   brand: string;
-
-  @Prop({ required: true })
   name: string;
-
-  @Prop({ required: true })
   sale_price: string;
+  created_at: string;
 }
 
-export const ProductSchema = SchemaFactory.createForClass(Product);
+export const TableName = process.env.DYNAMODB_TABLE || 'products';
